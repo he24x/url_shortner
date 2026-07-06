@@ -1,6 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import RedirectResponse
 from .code_generator import generate_unique_code
 from .database import get_url, increment_click_count, save, get_click_count
+from .models import URLRequest, URLResponse, ClickCountResponse
 
 app = FastAPI()
 
@@ -9,17 +11,17 @@ async def read_root():
     return {"Hello": "World"}
 
 @app.post("/shorten")
-async def shorten_url(url: str):
+async def shorten_url(url: URLRequest):
     short_code = generate_unique_code(8)
-    save(short_code, url)
-    return {"short_code": short_code, "url": url}
+    save(short_code, str(url.url))
+    return URLResponse(url=str(url.url), shortcode=short_code)
 
 @app.get("/clicks/{short_code}")
 def read_click_count(short_code: str):  
     clicks = get_click_count(short_code)
     if clicks is None:
-        return {"error": "Short code not found"}
-    return {"short_code": short_code, "clicks": clicks}
+        raise HTTPException(status_code=404, detail="Short code not found")
+    return ClickCountResponse(short_code=short_code, clicks=clicks)
 
 @app.get("/{short_code}")
 async def redirect_to_url(short_code: str):
@@ -28,6 +30,6 @@ async def redirect_to_url(short_code: str):
     if url:
         increment_click_count(short_code)
         print(f"Click count for {short_code}: {get_click_count(short_code)}")
-        return {"url": url["long_url"]}
+        return RedirectResponse(str(url["long_url"]))
     else:
-        return {"error": "Short code not found"}
+        raise HTTPException(status_code=404, detail="Short code not found")
