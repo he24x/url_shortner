@@ -1,8 +1,23 @@
-echo ".venv/
+# Python
 __pycache__/
-*.pyc
-.pytest_cache/
+*.py[cod]
 *.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Virtual environment (uv)
+.venv/
+
+# Secrets / environment — CRITICAL
 .env
+.env.*
+
+# Local database files (SQLite leftovers)
 *.db
-*.sqlite3" > .gitignore
+*.sqlite3
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
